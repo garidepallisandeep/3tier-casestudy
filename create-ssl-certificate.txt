@@ -1,0 +1,113 @@
+# Create a private key and the website certificate using the OpenSSL command.
+
+# Create Certificate folder
+mkdir /etc/nginx/certificate
+
+cd /etc/nginx/certificate
+
+# run openssl to create certificate
+
+openssl req -new -newkey rsa:4096 -x509 -sha256 -days 365 -nodes -out nginx-certificate.crt -keyout nginx.key
+
+
+On the option named COMMON_NAME, you need to enter the IP address or hostname.
+
+In our example, we used the IP address <192.168.1.15>.
+
+# Edit the Nginx configuration file for the default website.
+
+
+server {
+    listen       80 default_server;
+    server_name  localhost;
+    root         /var/www/html;
+
+    charset utf-8;
+    #access_log  /var/log/nginx/host.access.log  main;
+
+    location / {
+        index  index.php index.html index.htm;
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    error_page  404              /404.html;
+
+    # redirect server error pages to the static page /50x.html
+    #
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /var/www/html;
+    }
+
+    # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+    #
+    location ~ \.php$ {
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass   php:9000;
+        fastcgi_index  index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include        fastcgi_params;
+    }
+
+    # deny access to .htaccess files, if Apache's document root
+    # concurs with nginx's one
+    #
+    location ~ /\.ht {
+        deny  all;
+    }
+}
+
+
+#after our configuration
+
+redirect HTTP users to the HTTPS version of your website.
+
+In this case, use the following configuration.
+
+
+server {
+    listen 443 ssl default_server;
+    listen [::]:443 ssl default_server;
+    ssl_certificate /etc/nginx/certificate/nginx-certificate.crt;
+    ssl_certificate_key /etc/nginx/certificate/nginx.key;
+    root         /var/www/html;
+    charset utf-8;
+    server_name localhost;
+    location / {
+        index  index.php index.html index.htm;
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    error_page  404              /404.html;
+
+    # redirect server error pages to the static page /50x.html
+    #
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /var/www/html;
+    }
+
+    # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+    #
+    location ~ \.php$ {
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass   php:9000;
+        fastcgi_index  index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include        fastcgi_params;
+    }
+
+    # deny access to .htaccess files, if Apache's document root
+    # concurs with nginx's one
+    #
+    location ~ /\.ht {
+        deny  all;
+    }
+}
+
+
+
+# Restart the Nginx service.
+
+
+service nginx restart

@@ -1,0 +1,22 @@
+# Add the below lines in any of the http, server or location / blocks as shown below in nginx.conf and default.conf
+
+
+http{
+    ...
+    allow 192.168.1.0/24;
+    deny all;
+    ...
+ }
+ 
+ server{
+     ...
+     allow 192.168.1.0/24;
+     deny all;
+     ...
+ }
+ 
+ 
+ location / {
+    allow 192.168.1.0/24;
+    deny all;
+ }
